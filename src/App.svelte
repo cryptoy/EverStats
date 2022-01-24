@@ -207,9 +207,9 @@
 </div>
 
 <br />
-<details>
+<details class:hidden={isLoading}>
   <summary>Details</summary>
-  <pre class:hidden={isLoading}>{formattedData}</pre>
+  <pre>{formattedData}</pre>
 </details>
 
 <style>
