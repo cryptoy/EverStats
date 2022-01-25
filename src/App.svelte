@@ -3,7 +3,7 @@
   import SvelteTable from "svelte-table";
 
   const statsUrl = "https://everrise.azurewebsites.net/stats";
-  const refreshRate = 3000;
+  const refreshRate = 50;
 
   let isLoading = true;
   const USDFormatter = new Intl.NumberFormat("en-US", {
@@ -43,6 +43,7 @@
       key: "holders",
       title: "HOLDERS",
       value: (v) => v.holders,
+      renderValue: (v) => parseInt(v.holders),
     },
     {
       key: "staked",
@@ -78,6 +79,7 @@
       key: "holders",
       title: "HOLDERS",
       value: (v) => v.holders,
+      renderValue: (v) => parseInt(v.holders),
       sortable: true,
     },
     {
@@ -111,64 +113,120 @@
 
     formattedData = JSON.stringify(rawData, null, 2);
 
-    unifiedRows = [];
-    // UNIFIED
-    unifiedRows.push({
-      chain: "ALL UNIFIED",
-      price: getPrice("unified"),
-      marketCap: getMarketCap("unified"),
-      holders: getHolders("unified"),
-      staked: getStaked("unified"),
-    });
+    if (unifiedRows.length != 0) {
+      const numUpdates = 50;
+      const timeBetweenUpdates = 100;
+      const old = unifiedRows[0];
+      const priceIncr = (getPrice("unified") - old.price) / numUpdates;
+      const marketCapIncr =
+        (getMarketCap("unified") - old.marketCap) / numUpdates;
+      const holdersIncr = (getHolders("unified") - old.holders) / numUpdates;
+      const stakedIncr = (getStaked("unified") - old.staked) / numUpdates;
 
-    rows = [];
-    // BSC
-    rows.push({
-      chain: "Binance",
-      price: getPrice("bsc"),
-      marketCap: getMarketCap("bsc"),
-      holders: getHolders("bsc"),
-      staked: getStaked("bsc"),
-    });
+      let incrs = [];
 
-    // Polygon
-    rows.push({
-      chain: "Polygon",
-      price: getPrice("poly"),
-      marketCap: getMarketCap("poly"),
-      holders: getHolders("poly"),
-      staked: getStaked("poly"),
-    });
+      rows.forEach((row) => {
+        incrs.push({
+          price: (getPrice(row.id) - row.price) / numUpdates,
+          marketCap: (getMarketCap(row.id) - row.marketCap) / numUpdates,
+          holders: (getHolders(row.id) - row.holders) / numUpdates,
+          staked: (getStaked(row.id) - row.staked) / numUpdates,
+        });
+      });
 
-    // Ethreum
-    rows.push({
-      chain: "Ethreum",
-      price: getPrice("eth"),
-      marketCap: getMarketCap("eth"),
-      holders: getHolders("eth"),
-      staked: getStaked("eth"),
-    });
+      for (let i = 0; i < numUpdates; i++) {
+        const old = unifiedRows[0];
 
-    // Fantom
-    rows.push({
-      chain: "Fantom",
-      price: getPrice("ftm"),
-      marketCap: getMarketCap("ftm"),
-      holders: getHolders("ftm"),
-      staked: getStaked("ftm"),
-    });
+        unifiedRows[0] = {
+          chain: "ALL UNIFIED",
+          price: old.price + priceIncr,
+          marketCap: old.marketCap + marketCapIncr,
+          holders: old.holders + holdersIncr,
+          staked: old.staked + stakedIncr,
+        };
 
-    // Avalanche
-    rows.push({
-      chain: "Avalanche",
-      price: getPrice("avax"),
-      marketCap: getMarketCap("avax"),
-      holders: getHolders("avax"),
-      staked: getStaked("avax"),
-    });
+        unifiedRows = unifiedRows;
 
-    unifiedRows = unifiedRows;
-    rows = rows;
+        rows.forEach((row, i) => {
+          rows[i] = {
+            id: row.id,
+            chain: row.chain,
+            price: row.price + incrs[i].price,
+            marketCap: row.marketCap + incrs[i].marketCap,
+            holders: row.holders + incrs[i].holders,
+            staked: row.staked + incrs[i].staked,
+          };
+          rows = rows;
+        });
+
+        await new Promise((resolve, reject) => {
+          setTimeout(() => resolve(1), timeBetweenUpdates);
+        });
+      }
+    } else {
+      // UNIFIED
+      unifiedRows.push({
+        id: "unified",
+        chain: "ALL UNIFIED",
+        price: getPrice("unified"),
+        marketCap: getMarketCap("unified"),
+        holders: getHolders("unified"),
+        staked: getStaked("unified"),
+      });
+
+      // BSC
+      rows.push({
+        id: "bsc",
+        chain: "Binance",
+        price: getPrice("bsc"),
+        marketCap: getMarketCap("bsc"),
+        holders: getHolders("bsc"),
+        staked: getStaked("bsc"),
+      });
+
+      // Polygon
+      rows.push({
+        id: "poly",
+        chain: "Polygon",
+        price: getPrice("poly"),
+        marketCap: getMarketCap("poly"),
+        holders: getHolders("poly"),
+        staked: getStaked("poly"),
+      });
+
+      // Ethreum
+      rows.push({
+        id: "eth",
+        chain: "Ethreum",
+        price: getPrice("eth"),
+        marketCap: getMarketCap("eth"),
+        holders: getHolders("eth"),
+        staked: getStaked("eth"),
+      });
+
+      // Fantom
+      rows.push({
+        id: "ftm",
+        chain: "Fantom",
+        price: getPrice("ftm"),
+        marketCap: getMarketCap("ftm"),
+        holders: getHolders("ftm"),
+        staked: getStaked("ftm"),
+      });
+
+      // Avalanche
+      rows.push({
+        id: "avax",
+        chain: "Avalanche",
+        price: getPrice("avax"),
+        marketCap: getMarketCap("avax"),
+        holders: getHolders("avax"),
+        staked: getStaked("avax"),
+      });
+
+      unifiedRows = unifiedRows;
+      rows = rows;
+    }
 
     if (isLoading) {
       isLoading = false;
