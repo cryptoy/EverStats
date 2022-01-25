@@ -114,8 +114,8 @@
     formattedData = JSON.stringify(rawData, null, 2);
 
     if (unifiedRows.length != 0) {
-      const numUpdates = 50;
-      const timeBetweenUpdates = 100;
+      const numUpdates = 100;
+      const timeBetweenUpdates = 40;
       const old = unifiedRows[0];
       const priceIncr = (getPrice("unified") - old.price) / numUpdates;
       const marketCapIncr =
