@@ -259,11 +259,11 @@
         staked: getStaked("poly"),
       });
 
-      // Ethreum
+      // Ethereum
       rows.push({
         id: "eth",
         icon: "icons/ethereum.svg",
-        chain: "Ethreum",
+        chain: "Ethereum",
         price: getPrice("eth"),
         marketCap: getMarketCap("eth"),
         liquidity: getLiquidity("eth"),
